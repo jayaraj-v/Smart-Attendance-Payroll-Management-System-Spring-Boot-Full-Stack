@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Add New HR - EPV System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+          margin: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background: linear-gradient(to right, #2c3e50, #3498db);
+          color: white;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          padding: 10px;
+        }
+
+        .container {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 20px 25px;
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          width: 100%;
+          max-width: 450px;
+          box-shadow: 0 0 12px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+          text-align: center;
+          margin-bottom: 15px;
+          font-size: 18px;
+        }
+
+        label {
+          display: block;
+          margin-top: 10px;
+          margin-bottom: 4px;
+          font-size: 13px;
+        }
+
+        input, select, textarea {
+          width: 100%;
+          padding: 7px 10px;
+          font-size: 13px;
+          border: none;
+          border-radius: 5px;
+        }
+
+        textarea {
+          resize: vertical;
+        }
+
+        button {
+          width: 100%;
+          margin-top: 15px;
+          padding: 10px;
+          font-size: 14px;
+          font-weight: bold;
+          background-color: #1abc9c;
+          border: none;
+          color: white;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+
+        button:hover {
+          background-color: #16a085;
+        }
+
+        #message {
+          margin-top: 10px;
+          text-align: center;
+          font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>➕ Add New HR</h2>
+
+    <label for="empId">Employee ID</label>
+    <input type="text" id="empId" placeholder="e.g. EPL0090" required>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Set login password" required>
+
+
+    <label for="name">Full Name</label>
+    <input type="text" id="name" placeholder="Enter full name" required>
+
+    <label for="dob">Date of Birth</label>
+    <input type="date" id="dob" required>
+
+    <label for="gender">Gender</label>
+    <select id="gender" required>
+        <option value="">-- Select Gender --</option>
+        <option value="MALE">Male</option>
+        <option value="FEMALE">Female</option>
+        <option value="OTHER">Other</option>
+    </select>
+
+    <label for="aadhaar">Aadhaar Number</label>
+    <input type="text" id="aadhaar" placeholder="12-digit Aadhaar" required>
+
+    <label for="address">Address</label>
+    <textarea id="address" rows="2" placeholder="Residential address" required></textarea>
+
+    <label for="type">Employee Type</label>
+    <select id="type" required>
+        <option value="">-- Select Type --</option>
+        <option value="REGULAR">REGULAR</option>
+        <option value="ALTERNATE">ALTERNATE</option>
+        <option value="INTERN">INTERN</option>
+        <option value="PART_TIME">PART_TIME</option>
+    </select>
+
+    <label for="role">Role</label>
+    <input type="text" id="role" value="HR" readonly>
+
+    <label for="doj">Date of Joining</label>
+    <input type="date" id="doj" required>
+
+    <label for="salary">Salary (₹/month)</label>
+    <input type="number" id="salary" placeholder="e.g. 30000" required>
+
+    <button onclick="addHR()">Add HR</button>
+
+    <div id="message"></div>
+    <center><a href="./admin-dashboard.html">🏠 Dashboard</a></center>
+</div>
+
+<script>
+    function addHR() {
+      const msg = document.getElementById("message");
+
+      const data = {
+  employeeId: document.getElementById("empId").value.trim(),
+  name: document.getElementById("name").value.trim(),
+  gender: document.getElementById("gender").value, // 👈 Add this
+  dob: document.getElementById("dob").value,
+  aadhaar: document.getElementById("aadhaar").value.trim(),
+  address: document.getElementById("address").value.trim(),
+  type: document.getElementById("type").value,
+  role: "HR",
+  dateOfJoining: document.getElementById("doj").value,
+  salary: parseFloat(document.getElementById("salary").value),
+  password: document.getElementById("password").value.trim()
+};
+
+
+
+      if (!data.employeeId || !data.name || !data.dob || !data.aadhaar || !data.address ||
+          !data.type || !data.dateOfJoining || !data.salary) {
+        msg.innerText = "⚠️ All fields are required.";
+        msg.style.color = "#ffe066";
+        return;
+      }
+
+      fetch('/admin/add-hr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data)
+      })
+      .then(res => {
+        if (res.ok) return res.text();
+        return res.text().then(err => { throw new Error(err); });
+      })
+      .then(success => {
+        msg.innerText = "✅ HR Added Successfully!";
+        msg.style.color = "#2ecc71";
+        document.getElementById("empId").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("dob").value = "";
+        document.getElementById("aadhaar").value = "";
+        document.getElementById("address").value = "";
+        document.getElementById("type").value = "";
+        document.getElementById("doj").value = "";
+        document.getElementById("salary").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("gender").value = "";
+
+      })
+      .catch(err => {
+        msg.innerText = "❌ " + err.message;
+        msg.style.color = "#e74c3c";
+      });
+    }
+</script>
+
+</body>
+</html>

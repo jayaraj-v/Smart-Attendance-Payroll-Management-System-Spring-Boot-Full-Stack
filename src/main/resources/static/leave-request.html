@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leave Requests - HR Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="./Images/cropped_circle_image%20(1).png" />
+    <style>
+        body {
+          margin: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background-color: #ecf0f1;
+        }
+
+        .header {
+          background-color: #2c3e50;
+          color: white;
+          padding: 20px;
+          text-align: center;
+        }
+
+        .main {
+          padding: 30px;
+        }
+
+        h2 {
+          margin-bottom: 20px;
+          color: #2c3e50;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          background-color: white;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+          padding: 14px;
+          text-align: center;
+          border-bottom: 1px solid #ddd;
+        }
+
+        th {
+          background-color: #2980b9;
+          color: white;
+        }
+
+        tr:hover {
+          background-color: #f9f9f9;
+        }
+
+        .btn {
+          padding: 6px 10px;
+          margin: 0 4px;
+          border: none;
+          border-radius: 4px;
+          font-size: 14px;
+          cursor: pointer;
+        }
+
+        .btn-approve {
+          background-color: #2ecc71;
+          color: white;
+        }
+
+        .btn-reject {
+          background-color: #e74c3c;
+          color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📩 Pending Leave Requests</h1>
+</div>
+
+<div class="main">
+    <h2>👥 Review Employee Leave Applications</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <th>EMPLOYEE ID</th>
+            <th>EMPLOYEE NAME</th>
+            <th>LEAVE TYPE</th>
+            <th>REASON</th>
+            <th>PRE-LEAVE DAYS</th>
+            <th>SUBMISSION DATE</th>
+            <th>ACTION</th>
+        </tr>
+        </thead>
+        <tbody id="leaveTableBody">
+        <!-- Data will load here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    let leaveRequests = [];
+
+    function loadLeaveRequests() {
+      fetch('/hr/leaves/pending', { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          leaveRequests = data;
+          renderTable();
+        })
+        .catch(err => {
+          console.error('Error fetching leave data:', err);
+        });
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('leaveTableBody');
+      tbody.innerHTML = "";
+
+      leaveRequests.forEach(leave => {
+        const row = `
+          <tr>
+            <td>${leave.employeeId}</td>
+            <td>${leave.employeeName}</td>
+            <td>${leave.leaveType}</td>
+            <td>${leave.reason}</td>
+            <td>${leave.days}</td>
+            <td>${leave.submissionDate}</td>
+            <td>
+              <button class="btn btn-approve" title="Approve" onclick="updateLeave('${leave.leaveId}', true)">✔️</button>
+              <button class="btn btn-reject" title="Reject" onclick="updateLeave('${leave.leaveId}', false)">❌</button>
+            </td>
+          </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function updateLeave(leaveId, approve) {
+  fetch(`/hr/leaves/${leaveId}/${approve ? 'approve' : 'reject'}`, {
+    method: 'PUT',
+    credentials: 'include'
+  })
+  .then(res => {
+    if (res.ok) {
+      leaveRequests = leaveRequests.filter(lr => lr.leaveId !== parseInt(leaveId));
+      renderTable();
+    } else {
+      alert("❌ Failed to update leave status");
+    }
+  })
+  .catch(err => {
+    console.error("Error updating leave:", err);
+  });
+}
+
+
+    loadLeaveRequests();
+</script>
+
+</body>
+</html>

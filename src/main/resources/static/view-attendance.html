@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>View Attendance - EPV System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" type="image/x-icon" href="./Images/cropped_circle_image%20(1).png" />
+    <style>
+        body {
+          margin: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background-color: #ecf0f1;
+        }
+
+        .header {
+          background-color: #2c3e50;
+          color: white;
+          padding: 20px;
+          text-align: center;
+        }
+
+        .main {
+          padding: 30px;
+        }
+
+        h2 {
+          margin-bottom: 20px;
+          color: #2c3e50;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          background-color: white;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+          padding: 14px;
+          text-align: center;
+          border-bottom: 1px solid #ddd;
+        }
+
+        th {
+          background-color: #2980b9;
+          color: white;
+        }
+
+        tr:hover {
+          background-color: #f9f9f9;
+        }
+
+        .summary-row {
+          font-weight: bold;
+          background-color: #f1f1f1;
+        }
+
+        .month-label {
+          text-align: left;
+          font-weight: bold;
+          background-color: #d6eaf8;
+          color: #154360;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📆 My Attendance Record</h1>
+</div>
+
+<div class="main">
+    <h2>🕒 Daily Attendance, Salary & Leave Summary</h2>
+
+    <!-- Export Buttons -->
+    <div style="margin-bottom: 15px;">
+        <button onclick="exportToCSV()" style="padding: 10px; margin-right: 10px;">⬇️ Download as CSV</button>
+        <button onclick="exportToPDF()" style="padding: 10px;">⬇️ Download as PDF</button>
+    </div>
+
+    <table id="attendanceTable">
+        <thead>
+        <tr>
+            <th>DATE</th>
+            <th>ATTENDANCE</th>
+            <th>SALARY EARNED</th>
+        </tr>
+        </thead>
+        <tbody id="attendanceTableBody">
+        <!-- Data injected from backend -->
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>>
+<script>
+    let attendanceData = [];
+
+    fetch('/employee/attendance/view', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        attendanceData = data;
+        renderTable(data);
+      });
+
+    function renderTable(data) {
+      const tbody = document.getElementById('attendanceTableBody');
+      tbody.innerHTML = "";
+      let currentMonth = "";
+      let monthlyTotal = 0;
+      let leaveCount = 0;
+      let carryForwardLeave = 0;
+
+      data.forEach((record, index) => {
+        const dateObj = new Date(record.date);
+        const monthYear = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        if (monthYear !== currentMonth) {
+          if (currentMonth) {
+            const creditDate = new Date(dateObj.getFullYear(), dateObj.getMonth() - 1, 5).toLocaleDateString('en-GB');
+            const maxLeaves = 2;
+            const remaining = Math.max(0, maxLeaves - leaveCount);
+            carryForwardLeave += remaining;
+
+            tbody.innerHTML += `
+              <tr class="summary-row">
+                <td colspan="2">Total Salary for ${currentMonth}</td>
+                <td>₹${monthlyTotal.toFixed(2)}<br><small>Credited on: ${creditDate}</small></td>
+              </tr>
+              <tr class="summary-row">
+                <td colspan="2">Leaves Taken in ${currentMonth}</td>
+                <td>${leaveCount} Days</td>
+              </tr>
+              <tr class="summary-row">
+                <td colspan="2">Leave Carried Forward</td>
+                <td>${carryForwardLeave} Days</td>
+              </tr>`;
+            monthlyTotal = 0;
+            leaveCount = 0;
+          }
+
+          currentMonth = monthYear;
+          tbody.innerHTML += `<tr><td colspan="3" class="month-label">📅 ${monthYear}</td></tr>`;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${record.date}</td>
+            <td>${record.attendance}</td>
+            <td>₹${record.salary}</td>
+          </tr>`;
+
+        monthlyTotal += record.salary;
+        if (record.attendance === "ABSENT" || record.attendance === "LEAVE") leaveCount++;
+
+        if (index === data.length - 1) {
+          const creditDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), 5).toLocaleDateString('en-GB');
+          const maxLeaves = 2;
+          const remaining = Math.max(0, maxLeaves - leaveCount);
+          carryForwardLeave += remaining;
+
+          tbody.innerHTML += `
+            <tr class="summary-row">
+              <td colspan="2">Total Salary for ${currentMonth}</td>
+              <td>₹${monthlyTotal.toFixed(2)}<br><small>Credited on: ${creditDate}</small></td>
+            </tr>
+            <tr class="summary-row">
+              <td colspan="2">Leaves Taken in ${currentMonth}</td>
+              <td>${leaveCount} Days</td>
+            </tr>
+            <tr class="summary-row">
+              <td colspan="2">Leave Carried Forward</td>
+              <td>${carryForwardLeave} Days</td>
+            </tr>`;
+        }
+      });
+    }
+
+    function exportToCSV() {
+      let csv = 'Date,Attendance,Salary Earned\n';
+      attendanceData.forEach(record => {
+        csv += `${record.date},${record.attendance},${record.salary}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'attendance_report.csv';
+      link.click();
+    }
+
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(12);
+      doc.text("Attendance Report - EPV System", 10, 10);
+      let y = 20;
+
+      doc.setFontSize(10);
+      doc.text("Date", 10, y);
+      doc.text("Attendance", 50, y);
+      doc.text("Salary", 110, y);
+
+      y += 8;
+      attendanceData.forEach(record => {
+        doc.text(`${record.date}`, 10, y);
+        doc.text(`${record.attendance}`, 50, y);
+        doc.text(`₹${record.salary}`, 110, y);
+        y += 8;
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+
+      doc.save('attendance_report.pdf');
+    }
+</script>
+</body>
+</html>

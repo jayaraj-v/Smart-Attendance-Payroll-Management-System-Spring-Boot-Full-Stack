@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>📝 Register Your Attendance - EPV System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" type="image/x-icon" href="./Images/cropped_circle_image%20(1).png" />
+    <style>
+        body {
+          margin: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background: linear-gradient(to right, #2c3e50, #3498db);
+          color: white;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          flex-direction: column;
+        }
+
+        h1 {
+          margin-bottom: 30px;
+        }
+
+        .button-group {
+          display: flex;
+          gap: 30px;
+        }
+
+        .btn {
+          padding: 15px 30px;
+          font-size: 16px;
+          font-weight: bold;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .btn-punch-in {
+          background-color: #27ae60;
+          color: white;
+        }
+
+        .btn-punch-in:hover {
+          background-color: #2ecc71;
+          transform: scale(1.05);
+        }
+
+        .btn-punch-out {
+          background-color: #c0392b;
+          color: white;
+        }
+
+        .btn-punch-out:hover {
+          background-color: #e74c3c;
+          transform: scale(1.05);
+        }
+
+        #message {
+          margin-top: 20px;
+          font-size: 18px;
+          font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📝 Register Your Attendance</h1>
+
+<div class="button-group">
+    <button class="btn btn-punch-in" onclick="markAttendance('IN')">👊 Punch In</button>
+    <button class="btn btn-punch-out" onclick="markAttendance('OUT')">✋ Punch Out</button>
+</div>
+
+<div id="message"></div>
+
+<script>
+    function markAttendance(type) {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const now = new Date();
+          const date = now.toISOString().split("T")[0]; // yyyy-mm-dd
+          const time = now.toTimeString().split(" ")[0]; // hh:mm:ss
+
+          const payload = {
+            type: type,
+            latitude: lat,
+            longitude: lon,
+            date: date,
+            time: time
+          };
+
+          fetch('/attendance/mark', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+          })
+          .then(res => res.text())
+          .then(message => {
+            document.getElementById('message').innerText = message;
+          })
+          .catch(err => {
+            console.error('Error marking attendance:', err);
+            document.getElementById('message').innerText = '❌ Failed to mark attendance.';
+          });
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          alert("Failed to get location. Make sure location services are enabled.");
+        }
+      );
+    }
+</script>
+
+
+</body>
+</html>
