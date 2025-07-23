@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard - EPV System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="./Images/cropped_circle_image%20(1).png" />
+    <style>
+        body {
+          margin: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background-color: #ecf0f1;
+        }
+
+        .header {
+          background-color: #2c3e50;
+          color: white;
+          padding: 20px;
+          text-align: center;
+        }
+
+        .container {
+          display: flex;
+          flex-wrap: wrap;
+        }
+
+        .sidebar {
+          width: 220px;
+          background-color: #34495e;
+          height: 100vh;
+          padding-top: 20px;
+          position: fixed;
+          top: 0;
+          left: 0;
+        }
+
+        .sidebar a {
+          display: block;
+          padding: 14px 22px;
+          color: white;
+          text-decoration: none;
+          font-weight: bold;
+          transition: all 0.2s;
+        }
+
+        .sidebar a:hover {
+          background-color: white;
+          color: #2c3e50;
+          transform: scale(1.05);
+          box-shadow: 0 0 8px rgba(250, 157, 8, 0.6);
+        }
+
+        .main {
+          margin-left: 220px;
+          padding: 30px;
+          flex: 1;
+        }
+
+        .cards {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+
+        .card {
+          background-color: white;
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+          width: 250px;
+          transition: transform 0.2s;
+        }
+
+        .card:hover {
+          transform: scale(1.04);
+        }
+
+        .card h3 {
+          color: #2c3e50;
+        }
+
+        .card p {
+          color: #555;
+        }
+
+        @media (max-width: 768px) {
+          .container {
+            flex-direction: column;
+          }
+
+          .sidebar {
+            width: 100%;
+            height: auto;
+            position: relative;
+          }
+
+          .main {
+            margin-left: 0;
+          }
+
+          .cards {
+            justify-content: center;
+          }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>👑 Admin Dashboard - Explorinno Pvt Ltd</h1>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <a href="./admin-dashboard.html">🏠 Dashboard</a>
+        <a href="./employee-directory.html">📇 Employee Directory</a>
+        <a href="./attendance-report.html">📊 Attendance Report</a>
+        <a href="./payroll.html">💵 Payroll</a>
+        <a href="./add-hr.html">🧑‍💼 Add HR</a>
+        <a href="./change-password.html">🔑 Change Password</a>
+        <a href="#" onclick="logout()">🔐 Logout</a>
+
+    </div>
+
+    <div class="main">
+        <h2 id="greeting">Welcome, Admin!</h2>
+        <p>Overview of your administrative controls</p>
+
+        <div class="cards">
+            <div class="card">
+                <h3>👥 Employees</h3>
+                <p id="employeeCount">Loading...</p>
+            </div>
+            <div class="card"><h3>📈 Performance</h3><p>Evaluate & track performance</p></div>
+            <div class="card">
+                <h3>🕒 Today's Attendance</h3>
+                <p><strong>Total:</strong> <span id="totalEmployees">Loading...</span></p>
+                <p><strong>Present:</strong> <span id="presentEmployees">Loading...</span></p>
+                <p><strong>Absent:</strong> <span id="absentEmployees">Loading...</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Dynamically load data from your Spring Boot backend
+    fetch('/admin/dashboard-summary', {
+  method: 'GET',
+  credentials: 'include'
+})
+.then(res => res.json())
+.then(data => {
+  document.getElementById('employeeCount').innerText = `${data.totalEmployees} registered`;
+
+  // Updated attendance section
+  document.getElementById('totalEmployees').innerText = data.totalEmployees;
+  document.getElementById('presentEmployees').innerText = data.todayAttendance;
+  document.getElementById('absentEmployees').innerText = data.totalEmployees - data.todayAttendance;
+
+  document.getElementById('payrollCount').innerText = `${data.payrollPending} pending payroll`;
+})
+.catch(err => {
+  console.error('Failed to fetch dashboard data:', err);
+});
+
+</script>
+
+<script>
+    function logout() {
+      fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+      .then(() => {
+        window.location.href = '/login.html';
+      })
+      .catch(() => {
+        alert("❌ Logout failed.");
+      });
+    }
+</script>
+
+
+</body>
+</html>

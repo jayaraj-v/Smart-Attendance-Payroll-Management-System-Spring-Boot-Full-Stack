@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Login - Secure Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        * {
+          box-sizing: border-box;
+          font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+          height: 100vh;
+          background: linear-gradient(135deg, #1f4037, #99f2c8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .login-container {
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(15px);
+          padding: 2.5rem;
+          border-radius: 20px;
+          box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+          width: 100%;
+          max-width: 400px;
+          animation: dropIn 0.8s ease-out;
+          position: relative;
+        }
+
+        @keyframes dropIn {
+          0% {
+            transform: translateY(-40px);
+            opacity: 0;
+          }
+          100% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        .login-container h2 {
+          text-align: center;
+          color: #ffffff;
+          margin-bottom: 1.5rem;
+          text-shadow: 1px 1px 2px #000;
+        }
+
+        .form-group {
+          position: relative;
+          margin-bottom: 1.8rem;
+        }
+
+        .form-group input,
+        .form-group select {
+          width: 100%;
+          padding: 0.75rem 0.75rem;
+          background: transparent;
+          border: none;
+          border-bottom: 2px solid #ffffff;
+          color: #fff;
+          font-size: 1rem;
+          transition: all 0.3s;
+        }
+
+        .form-group label {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          color: #eee;
+          pointer-events: none;
+          transition: all 0.3s ease;
+          font-size: 1rem;
+        }
+
+        .form-group input:focus + label,
+        .form-group input:not(:placeholder-shown) + label,
+        .form-group select:focus + label,
+        .form-group select:not([value=""]) + label {
+          top: -14px;
+          left: 0px;
+          font-size: 0.8rem;
+          color: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+          outline: none;
+          border-color: #00ffe1;
+        }
+
+        .btn-login {
+          width: 100%;
+          padding: 0.8rem;
+          background: linear-gradient(to right, #00c6ff, #0072ff);
+          border: none;
+          border-radius: 30px;
+          color: white;
+          font-size: 1rem;
+          font-weight: bold;
+          letter-spacing: 1px;
+          cursor: pointer;
+          box-shadow: 0 0 10px #00ffe1, 0 0 20px #0072ff;
+          transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-login:hover {
+          transform: scale(1.05);
+          box-shadow: 0 0 15px #00ffe1, 0 0 25px #0072ff;
+        }
+
+        .message {
+          margin-top: 1rem;
+          text-align: center;
+          padding: 0.5rem;
+          border-radius: 8px;
+          font-size: 0.9rem;
+        }
+
+        .error {
+          background-color: rgba(255, 0, 0, 0.2);
+          color: #fff;
+          border: 1px solid #ff4d4d;
+        }
+
+        .logout {
+          background-color: rgba(0, 255, 128, 0.2);
+          color: #fff;
+          border: 1px solid #00ff99;
+        }
+
+        select {
+          appearance: none;
+          background: transparent;
+          color: white;
+        }
+
+        option {
+          background: #222;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h2>Welcome Back 👋</h2>
+
+    <div id="message"></div>
+
+    <form id="loginForm" method="post" action="/login">
+        <div class="form-group">
+            <input type="text" name="username" id="username" required placeholder=" " />
+            <label for="username">Username</label>
+        </div>
+
+        <div class="form-group">
+            <input type="password" name="password" id="password" required placeholder=" " />
+            <label for="password">Password</label>
+        </div>
+
+        <div class="form-group">
+            <select name="role" id="role" required>
+                <option value="" disabled selected hidden></option>
+                <option value="ADMIN">Admin</option>
+                <option value="HR">HR</option>
+                <option value="EMPLOYEE">Employee</option>
+            </select>
+            <label for="role">Select Role</label>
+        </div>
+
+        <button type="submit" class="btn-login">Login</button>
+    </form>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("error")) {
+    document.getElementById("message").innerHTML =
+      '<div class="message error">❌ Invalid username, password or role.</div>';
+  } else if (params.has("logout")) {
+    document.getElementById("message").innerHTML =
+      '<div class="message logout">✅ Successfully logged out!</div>';
+  }
+</script>
+</body>
+</html>

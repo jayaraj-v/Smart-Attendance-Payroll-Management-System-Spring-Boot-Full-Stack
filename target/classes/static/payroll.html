@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8" />
+      <title>💰 Payroll Management - EPV System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/x-icon" href="./Images/cropped_circle_image%20(1).png" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(to right, #2c3e50, #3498db);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    .container {
+      background-color: rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 800px;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    h1, h3 {
+      text-align: center;
+      color: #fff;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #1abc9c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #16a085;
+      transform: scale(1.03);
+    }
+
+    table {
+      margin-top: 30px;
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      color: #333;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #2980b9;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #ecf0f1;
+    }
+
+    #message {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      input, button {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>💰 Payroll Processing</h1>
+
+  <label for="monthInput">🗓 Enter Month (YYYY-MM)</label>
+  <input type="month" id="monthInput" required />
+
+  <button onclick="processPayroll()">⚙️ Process Payroll</button>
+
+  <div id="message"></div>
+
+  <h3>📋 Payroll History (Current User)</h3>
+  <table id="historyTable">
+    <thead>
+    <tr>
+      <th>Employee ID</th>
+      <th>Month</th>
+      <th>Credited Date</th>
+      <th>Total Salary</th>
+    </tr>
+    </thead>
+    <tbody id="historyBody">
+    <!-- Loaded dynamically -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+  let currentEmployeeId = "";
+
+  // Auto fetch current user ID
+  fetch('/user/session', { credentials: 'include' })
+    .then(res => res.text())
+    .then(empId => {
+      currentEmployeeId = empId;
+      loadHistory(empId);
+    });
+
+  function processPayroll() {
+    const month = document.getElementById('monthInput').value;
+    const msg = document.getElementById('message');
+
+    if (!month) {
+      msg.innerText = "⚠️ Please select a valid month!";
+      msg.style.color = "#f1c40f";
+      return;
+    }
+
+    fetch(`/payroll/process/${month}`, {
+      method: "POST",
+      credentials: 'include'
+    })
+    .then(res => res.text())
+    .then(data => {
+      msg.innerText = "✅ " + data;
+      msg.style.color = "#2ecc71";
+      loadHistory(currentEmployeeId);
+    })
+    .catch(() => {
+      msg.innerText = "❌ Failed to process payroll!";
+      msg.style.color = "#e74c3c";
+    });
+  }
+
+  function loadHistory(empId) {
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = "";
+
+    fetch(`/payroll/history/${empId}`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(row => {
+          const tr = `<tr>
+            <td>${row.employeeId}</td>
+            <td>${row.month}</td>
+            <td>${row.creditedDate}</td>
+            <td>₹${row.totalSalary.toFixed(2)}</td>
+          </tr>`;
+          tbody.innerHTML += tr;
+        });
+      });
+  }
+</script>
+
+</body>
+</html>
+</title>
+</head>
+<body>
+
+</body>
+</html>

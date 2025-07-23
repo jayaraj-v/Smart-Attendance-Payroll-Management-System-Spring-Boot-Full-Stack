@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Employee Resignation Form - EPV System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+          margin: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background: linear-gradient(to right, #34495e, #2ecc71);
+          color: white;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          padding: 20px;
+        }
+
+        .container {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 20px 25px;
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          width: 100%;
+          max-width: 500px;
+          box-shadow: 0 0 12px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+          text-align: center;
+          margin-bottom: 20px;
+          font-size: 20px;
+        }
+
+        label {
+          display: block;
+          margin-top: 12px;
+          margin-bottom: 4px;
+          font-size: 14px;
+        }
+
+        input, select, textarea {
+          width: 100%;
+          padding: 8px 10px;
+          border-radius: 5px;
+          border: none;
+          font-size: 13px;
+        }
+
+        textarea {
+          resize: vertical;
+        }
+
+        button {
+          margin-top: 18px;
+          width: 100%;
+          padding: 10px;
+          font-size: 14px;
+          font-weight: bold;
+          background-color: #1abc9c;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+
+        button:hover {
+          background-color: #16a085;
+        }
+
+        #message {
+          margin-top: 12px;
+          text-align: center;
+          font-size: 13px;
+        }
+
+        .checkbox-group {
+          margin-top: 8px;
+          font-size: 13px;
+        }
+
+        .checkbox-group input {
+          margin-right: 6px;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container">
+    <h2>📤 Employee Resignation Request</h2>
+
+    <form id="resignationForm">
+        <label for="empName">Employee Name</label>
+        <input type="text" id="empName" disabled value="(Auto-Fill from Session)">
+
+        <label for="empId">Employee ID</label>
+        <input type="text" id="empId" disabled value="(Auto-Fill)">
+
+        <label for="role">Role</label>
+        <input type="text" id="role" disabled value="(Auto-Fill)" />
+
+        <label for="resignDate">Date of Resignation</label>
+        <input type="date" id="resignDate" required>
+
+        <label for="lastDay">Last Working Day</label>
+        <input type="date" id="lastDay" required>
+
+        <label for="noticePeriod">Notice Period Days</label>
+        <input type="number" id="noticePeriod" required placeholder="e.g. 10 / 45">
+
+        <label for="reason">Reason for Resignation</label>
+        <textarea id="reason" rows="4" placeholder="State your reason clearly" required></textarea>
+
+        <div class="checkbox-group">
+            <label><input type="checkbox" id="handoverComplete"> ✅ I confirm handover of assets/passwords is complete</label>
+            <label><input type="checkbox" id="exitInterview"> 🎤 I’m open to Exit Interview</label>
+            <label><input type="checkbox" id="requestLetters"> 📜 I request Experience & Relieving Letter</label>
+        </div>
+
+        <label for="confirmPassword">Enter Password to Confirm</label>
+        <input type="password" id="confirmPassword" placeholder="Enter your password" required>
+
+        <button type="submit">Submit Resignation</button>
+        <div id="message"></div>
+    </form>
+</div>
+
+<script>
+    const form = document.getElementById("resignationForm");
+    const msg = document.getElementById("message");
+
+    // Fetch session user details
+    fetch("/user/session-info", { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("empName").value = data.name;
+        document.getElementById("empId").value = data.employeeId;
+        document.getElementById("role").value = data.role.toUpperCase();
+        sessionUser = data; // set globally
+      })
+      .catch(err => {
+        console.error("Error fetching session info:", err);
+        msg.innerText = "⚠️ Failed to load user data.";
+        msg.style.color = "orange";
+      });
+
+    let sessionUser = {};
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if (sessionUser.role === "INTERN" || sessionUser.role === "PART_TIME") {
+        msg.innerText = "❌ Resignation not permitted for Interns or Part-Time employees.";
+        msg.style.color = "#ff4d4d";
+        return;
+      }
+
+      const password = document.getElementById("confirmPassword").value.trim();
+      if (!password) {
+        msg.innerText = "❌ Password is required to confirm resignation.";
+        msg.style.color = "#ff4d4d";
+        return;
+      }
+
+      const resignationData = {
+        resignationDate: document.getElementById("resignDate").value,
+        lastWorkingDay: document.getElementById("lastDay").value,
+        noticePeriodDays: parseInt(document.getElementById("noticePeriod").value),
+        reason: document.getElementById("reason").value.trim(),
+        handoverComplete: document.getElementById("handoverComplete").checked,
+        exitInterview: document.getElementById("exitInterview").checked,
+        requestLetters: document.getElementById("requestLetters").checked,
+        password: password
+      };
+
+      fetch('/employee/resignation-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(resignationData)
+      })
+      .then(res => {
+        if (res.ok) return res.text();
+        return res.text().then(err => { throw new Error(err); });
+      })
+      .then(response => {
+        msg.style.color = "#2ecc71";
+        msg.innerText = "✅ Resignation submitted for approval.";
+        form.reset();
+      })
+      .catch(err => {
+        msg.style.color = "#e74c3c";
+        msg.innerText = "❌ Error: " + err.message;
+      });
+    });
+</script>
+
+</body>
+</html>
